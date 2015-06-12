@@ -1,8 +1,14 @@
 package main
 
 import "os"
-import "os/exec"
+import dbus "github.com/guelfey/go.dbus"
 import "fmt"
+
+// This program interacts with any Media Player implementing
+// the MPRIS D-Bus Inteface Spcecification.
+
+// currently only use this player
+var mediaPlayer string = "spotify"
 
 var usageMsg string = `mediaKeys [play | prev | next | vol-up | vol-down | mute]
 
@@ -18,27 +24,23 @@ func usage() {
 	os.Exit(1)
 }
 
-func main() {
-	keys := make(map[string]string)
-	keys["play"] = "XF86AudioPlay"
-	keys["prev"] = "XF86AudioPrev"
-	keys["next"] = "XF86AudioNext"
-	keys["vol-up"] = "XF86AudioRaiseVolume"
-	keys["vol-down"] = "XF86AudioLowerVolume"
-	keys["mute"] = "XF86AudioMute"
+func sendCommand(player string, command string) error {
+	// Connect to player and send command
+	conn, err := dbus.SessionBus();
+	if err != nil {
+		return err;
+	}
+	defer conn.Close();
 
-	if len(os.Args) != 2 {
-		usage()
-	} else {
-		key := keys[os.Args[1]]
-		if key == "" {
-			usage()
-		} else {
-			cmd := exec.Command("xdotool", "key", key)
-			err := cmd.Run()
-			if err != nil {
-				fmt.Printf("%s\n", err)
-			}
-		}
+	// Emits signal on message bus
+	conn.Emit("org.mpris.MediaPlayer2.spotify", "/org/mpris/MediaPlayer2", "org.mpris.MediaPlayer2." + command)
+
+	return nil
+}
+
+func main() {
+	err := sendCommand(mediaPlayer, "Player.PlayPause")
+	if err != nil {
+		fmt.Printf("%s\n", err)
 	}
 }
