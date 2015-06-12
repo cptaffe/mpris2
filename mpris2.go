@@ -3,7 +3,7 @@ package mpris2
 import dbus "github.com/guelfey/go.dbus"
 
 type Player struct {
-	name string // name of the player, e.g "spotify"
+	Name string // name of the player, e.g "spotify"
 }
 
 func Players() (players []*Player, err error) {
@@ -12,8 +12,10 @@ func Players() (players []*Player, err error) {
 		return
 	}
 
-	for i, name := range conn.Names() {
-		players = players[0:i]
+	names := conn.Names()
+	players = make([]*Player, len(names))
+
+	for i, name := range names {
 		players[i] = NewPlayer(name)
 	}
 	return
@@ -21,7 +23,7 @@ func Players() (players []*Player, err error) {
 
 func NewPlayer(name string) *Player {
 	player := new(Player)
-	player.name = "org.mpris.MediaPlayer2." + name
+	player.Name = "org.mpris.MediaPlayer2." + name
 	return player
 }
 
@@ -31,7 +33,7 @@ func (player *Player) object() (obj *dbus.Object, err error) {
 		return
 	}
 
-	obj = conn.Object(player.name, "/org/mpris/MediaPlayer2")
+	obj = conn.Object(player.Name, "/org/mpris/MediaPlayer2")
 	return
 }
 
