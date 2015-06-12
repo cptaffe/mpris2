@@ -6,6 +6,19 @@ type Player struct {
 	name string // name of the player, e.g "spotify"
 }
 
+func Players() (players []*Player, err error) {
+	conn, err := dbus.SessionBus()
+	if err != nil {
+		return
+	}
+
+	for i, name := range conn.Names() {
+		players = players[0:i]
+		players[i] = NewPlayer(name)
+	}
+	return
+}
+
 func NewPlayer(name string) *Player {
 	player := new(Player)
 	player.name = "org.mpris.MediaPlayer2." + name
